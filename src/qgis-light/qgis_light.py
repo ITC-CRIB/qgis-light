@@ -23,7 +23,6 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from processing.gui.AlgorithmDialog import AlgorithmDialog
-from processing.gui.MessageDialog import MessageDialog
 
 
 class QGISLightPlugin:
@@ -33,6 +32,7 @@ class QGISLightPlugin:
     _message_levels = {
         "info": Qgis.MessageLevel.Info,
         "warning": Qgis.MessageLevel.Warning,
+        "error": Qgis.MessageLevel.Critical,
     }
 
     # Toolbar areas
@@ -141,10 +141,7 @@ class QGISLightPlugin:
 
         result, message = algorithm.canExecute()
         if not result:
-            dialog = MessageDialog()
-            dialog.setTitle("Error")
-            dialog.setMessage(message)
-            dialog.exec()
+            self.message(message, "error")
             return
 
         dialog = algorithm.createCustomParametersWidget(self.mainwindow)
