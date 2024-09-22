@@ -194,7 +194,6 @@
     "Overview": "fixed:left",
     "Layers": "fixed:left",
     "DataPlotly-DataPlotly-Dock": "hidden:right",
-    "MessageLog": "fixed:bottom",
     "ResultsViewer": "hidden:right",
     "StatisticalSummaryDockWidget": "hidden:right",
     "VertexEditor": "hidden:right"
