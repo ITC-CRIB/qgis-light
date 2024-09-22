@@ -412,6 +412,10 @@ class QGISLightPlugin:
                 self.log(f"Panel {name} is hidden.")
 
         for name in panels:
+            panel = self.mainwindow.findChild(QDockWidget, name)
+            if not panel:
+                self.log(f"Panel {name} not found.", "warning")
+                continue
             state, area = panels[name].split(":", 1)
             self.mainwindow.addDockWidget(
                 self._panel_areas.get(area, Qt.LeftDockWidgetArea),
@@ -422,6 +426,7 @@ class QGISLightPlugin:
                 panel.show()
             elif state == "hidden":
                 panel.hide()
+            self.log(f"Panel {name} is set as {state} at area {area}.")
 
         if store:
             self.settings.setValue("qgislight/panels", items)
