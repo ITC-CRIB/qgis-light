@@ -22,7 +22,7 @@ from qgis.PyQt.QtWidgets import (
     QWidgetAction
 )
 
-from processing.gui.AlgorithmDialog import AlgorithmDialog
+from processing import execAlgorithmDialog
 
 
 class QGISLightPlugin:
@@ -131,37 +131,6 @@ class QGISLightPlugin:
                 return action
 
 
-    def executeAlgorithm(self, id: str):
-        """Executes processing algorithm.
-
-        Args:
-            id (str): Processing algorithm id.
-        """
-        algorithm = QgsApplication.processingRegistry().createAlgorithmById(id)
-
-        result, message = algorithm.canExecute()
-        if not result:
-            self.message(message, "error")
-            return
-
-        dialog = algorithm.createCustomParametersWidget(self.mainwindow)
-        if not dialog:
-            dialog = AlgorithmDialog(algorithm, parent=self.mainwindow)
-
-        canvas = self.iface.mapCanvas()
-        maptool = canvas.mapTool()
-
-        dialog.show()
-        dialog.exec()
-
-        if canvas.mapTool() != maptool:
-            try:
-                canvas.mapTool().reset()
-            except Exception:
-                pass
-            canvas.setMapTool(maptool)
-
-
     def getItems(self, token: str) -> list:
         """Returns objects indicated by the identifier token.
 
@@ -183,7 +152,7 @@ class QGISLightPlugin:
             action = QAction(self.mainwindow)
             action.setIcon(algorithm.icon())
             action.setText(algorithm.displayName())
-            action.triggered.connect(lambda: self.executeAlgorithm(token))
+            action.triggered.connect(lambda: execAlgorithmDialog(token))
             return [action]
 
         if token == "mActionDisableQGISLight":
