@@ -114,6 +114,7 @@ class QGISLightPlugin:
             Action object if found, None otherwise.
         """
         for action in widget.actions():
+
             if isinstance(action, QWidgetAction):
                 action = self.findAction(action.defaultWidget(), id)
 
@@ -297,32 +298,42 @@ class QGISLightPlugin:
 
 
     def restoreLayout(self):
-        """Restores layout of the user interface."""
+        """Restores layout of the user interface.
+
+        Toolbars and panels are restored to the layout that was stored before
+        the simplifications were enabled.
+        """
         self.log("Restoring user interface layout.")
 
         # Restore toolbars
         items = self.settings.value("qgislight/toolbars", [])
-
         for item in items:
+
             toolbar = self.mainwindow.findChild(QToolBar, item["name"])
             if not toolbar:
                 self.log(f"Toolbar {item['name']} not found.", "warning")
                 continue
+
             if self.mainwindow.toolBarArea(toolbar) != item["area"]:
                 self.mainwindow.addToolBar(item["area"], toolbar)
+
             toolbar.show()
+            self.log(f"Toolbar {item['name']} is visible.")
 
         # Restore panels
         items = self.settings.value("qgislight/panels", [])
-
         for item in items:
+
             panel = self.mainwindow.findChild(QDockWidget, item["name"])
             if not panel:
                 self.log(f"Panel {item['name']} not found.", "warning")
                 continue
+
             if self.mainwindow.dockWidgetArea(panel) != item["area"]:
                 self.mainwindow.addDockWidget(item["area"], panel)
+
             panel.setFeatures(QDockWidget.DockWidgetFeatures(item["features"]))
+
             if item["hidden"]:
                 panel.hide()
             else:
@@ -330,7 +341,11 @@ class QGISLightPlugin:
 
 
     def disable(self, store: bool = False):
-        """Disables simplifications."""
+        """Disables simplifications.
+
+        Args:
+            store (bool): Set True to store enabled flag (default = False).
+        """
         self.log("Disabling simplifications.")
 
         # Clear enabled flag if required
@@ -367,7 +382,11 @@ class QGISLightPlugin:
 
 
     def enable(self, store: bool = False):
-        """Enables simplifications."""
+        """Enables simplifications.
+
+        Args:
+            store (bool): Set True to store layout (default = False)
+        """
         self.log("Enabling simplifications.")
 
         # Set enabled flag
