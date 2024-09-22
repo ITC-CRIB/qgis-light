@@ -1,0 +1,13 @@
+[general]
+name=QGIS Light
+description=QGIS made simple - a light user interface for core GIS functions.
+about=This plugin simplifies the QGIS user interface by reducing the number of
+    toolbars, panels, and widgets.
+version=0.1.0
+qgisMinimumVersion=3.22
+qgisMaximumVersion=3.99
+author=Serkan Girgin
+email=girgink@gmail.com
+repository=https://github.com/ITC-CRIB/qgis-light
+icon=icons/qgis-green.png
+plugin_dependencies=QuickMapServices,Data Plotly
