@@ -346,6 +346,15 @@ class QGISLightPlugin:
         if self.config.get("providers", {}).get("data_items"):
             self.message("Restart QGIS to enable removed data items.")
 
+        # Set up status bar
+        for name, state in self.config.get("statusbar", {}).items():
+            widget = self.mainwindow.findChild(QWidget, name)
+            if not widget:
+                self.log(f"Widget {name} not found.", "warning")
+                continue
+            if not state:
+                widget.show()
+
 
     def enable(self, store: bool = False):
         """Enables simplifications.
@@ -446,6 +455,15 @@ class QGISLightPlugin:
             for provider in registry.providers():
                 if provider.name() not in providers:
                     registry.removeProvider(provider)
+
+        # Set up status bar
+        for name, state in self.config.get("statusbar", {}).items():
+            widget = self.mainwindow.findChild(QWidget, name)
+            if not widget:
+                self.log(f"Widget {name} not found.", "warning")
+                continue
+            if not state:
+                widget.hide()
 
 
     def initGui(self):

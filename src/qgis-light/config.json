@@ -216,5 +216,11 @@
       "WFS",
       "WMS"
     ]
+  },
+  "statusbar": {
+    "LocatorWidget": false,
+    "mRotationLabel": false,
+    "mRotationEdit": false,
+    "mRenderSuppressionCBox": false
   }
 }
