@@ -43,3 +43,88 @@ analysis functionality.
   QGIS logo located on the top menu bar.
 
   ![QGIS Light exit tool button](docs/images/qgis-light-exit-toolbutton.png "QGIS Light exit tool button")
+
+## What is the scope of the simplifications?
+
+The target group we considered for the simplifications is follows:
+
+- Users will use local data files or connect to remote data stores via web
+  services (no (direct) database use).
+- Users will use 2d vector and raster data (no z and m values, no 3d, no point
+  clouds, mesh, etc.)
+- Users will work with a single map at a time (no multiple map canvases).
+- Users will not require to publish high-quality maps (no layouts).
+- Users will not require advanced analysis capabilities (no model building, no
+  advanced tools).
+- Users will require base maps (common base maps, e.g. OpenStreetMap, should be
+  available).
+- Users will create plots (plots should be created easily).
+
+## What are the simplifications?
+
+We checked all menus, toolbars, panels, and processing algorithms in detail to
+identify non-essential or duplicated components. We grouped remaining essential
+components for better usability.
+
+The following simplifications are performed by the plugin:
+
+- No menu bar.
+
+  All necessary menu items are provided as tool buttons.
+
+- Less toolbars.
+
+  The number of toolbars is reduced to two, one for core functions and another
+  one for editing. Common functions (e.g. zoom, select) are grouped and made
+  available through dropdown tool buttons.
+
+- Less panels.
+
+  Only two panels are made visible, overview and layers. The rest are hidden
+  and became visible only if they are needed (i.e. a related function is
+  requested).
+
+- Fixed layout of the toolbars and panels.
+
+  It is not possible to move or float toolbars and panels. This is to ensure
+  the same user experience among the users, which is especially important when
+  e.g. training non-technical users.
+
+- No processing toolbox.
+
+  All essential processing algorithms are accessible via dropdown tool buttons.
+
+- Less features.
+
+  The following functions are hidden from the user:
+
+  - SQL functions
+  - Z/M functions
+  - Database functions
+  - TIN functions
+  - Mesh functions
+  - Tile functions
+  - Curve functions
+  - GPS functions
+  - Cartography functions
+  - Random functions
+  - Fuzzify functions
+  - Modeler tools functions
+  - GRASS functions
+  - PDAL functions
+
+- Additional featues.
+
+  The following functions are added for a better user experience:
+
+  - Plot functions are replaced with ![DataPlotly](https://github.com/ghtmtt/DataPlotly).
+
+    DataPlotly enables changing plotting options easily (e.g. colors), provides
+    more plot types, integrates with the map canvas (i.e., plots are dynamically
+    updated based on the selected features), and most importantly gets rid of
+    opening an external file to access the plot (i.e. no external HTML file).
+
+  - Common base maps are provided by using ![QuickMapServices](https://github.com/nextgis/quickmapservices).
+
+    QuickMapServices provides a large set of base maps that can be added as
+    layers easily.
