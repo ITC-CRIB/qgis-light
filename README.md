@@ -96,6 +96,9 @@ The following simplifications are performed by the plugin:
 - No processing toolbox.
 
   All essential processing algorithms are accessible via dropdown tool buttons.
+  The current list of algorithms is rather draft and will be finalized soon
+  basedcon the [analysis document](docs/qgis-processing-algorithms.xlsx)
+  available under the documentation directory.
 
 - Less features.
 
@@ -131,6 +134,10 @@ The following simplifications are performed by the plugin:
 
     QuickMapServices provides a large set of base maps that can be added as
     layers easily.
+
+Most of the simplifications listed above can be customized by editing the
+[`config.json`](src/qgis-light/config.json) file located under the plugin
+source code directory.
 
 
 ## Why there is a need for a plugin for the simplifications?
