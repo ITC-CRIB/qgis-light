@@ -41,3 +41,5 @@ analysis functionality.
 
 - To return back to the standard interface, click the tool button with a colored
   QGIS logo located on the top menu bar.
+
+  ![QGIS Light exit tool button](docs/images/qgis-light-exit-toolbutton.png "QGIS Light exit tool button")
