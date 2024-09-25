@@ -23,6 +23,7 @@ secondary education and citizen science activities. But a basic interface might
 also be useful for anybody that requires core data visualization, editing, and
 analysis functionality.
 
+
 ## How to simplify the QGIS interface?
 
 - Install QGIS Light by using the plugin manager.
@@ -44,6 +45,7 @@ analysis functionality.
 
   ![QGIS Light exit tool button](docs/images/qgis-light-exit-toolbutton.png "QGIS Light exit tool button")
 
+
 ## What is the scope of the simplifications?
 
 The target group we considered for the simplifications is follows:
@@ -59,6 +61,7 @@ The target group we considered for the simplifications is follows:
 - Users will require base maps (common base maps, e.g. OpenStreetMap, should be
   available).
 - Users will create plots (plots should be created easily).
+
 
 ## What are the simplifications?
 
@@ -128,3 +131,41 @@ The following simplifications are performed by the plugin:
 
     QuickMapServices provides a large set of base maps that can be added as
     layers easily.
+
+
+## Why there is a need for a plugin for the simplifications?
+
+QGIS offers options for user interface customization, such as `Interface
+Customization...` dialog that allows users to remove interface components they
+are not interested in.
+There is also the [CustomToolBar](https://github.com/All4Gis/CustomToolBar)
+plugin available to create custom toolbars by using the existing tools.
+However, any further customization, such as creating dropdown tool buttons,
+requires custom scripting.
+
+
+## What else can be simplified?
+
+Probably many other components. It is not exhaustive, but while working on
+the plugin we identified a list of issues that hinder better user experience,
+such as inconsistent terminology, similar tools with different set of
+parameters, tools with very similar names but performing different tasks, tools
+that might be easily incorporated in e.g. raster calculator, etc.
+
+You can check the slides of our QGIS User Conference 2024 talk on ["QGIS for
+Secondary Education and Citizen Science: Lowering the barrier by customizing
+the user interface"](https://zenodo.org/records/13830612) available on Zenodo,
+or watch the  [video recording](https://www.youtube.com/watch?v=btG-lVYYOCY) of
+the talk for more details.
+
+Having a critical look at the existing user interface elements and streamlining
+a refined and standardized user experience might be beneficial for QGIS. This
+will also facilitate initiatives like simplification.
+
+
+## Acknowledgements
+
+[Serkan Girgin](https://github.com/girgink) initiated the idea and developed
+the plugin. [Jay Gohil](https://github.com/Jay-Gohil) and
+[Indupriya Mydur](mailto:i.mydur@student.utwente.nl) contributed to the
+analysis of the components that were simplified.
