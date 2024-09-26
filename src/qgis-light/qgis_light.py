@@ -143,9 +143,6 @@ class QGISLightPlugin:
 
         Returns:
             List of objects identified by the token.
-
-        Raises:
-            Exception: If invalid parent object name.
         """
         algorithm = QgsApplication.processingRegistry().algorithmById(token)
         if algorithm:
@@ -186,7 +183,8 @@ class QGISLightPlugin:
 
         parent = self.mainwindow.findChild(QWidget, parent_name)
         if not parent:
-            raise Exception(f"Invalid parent object name {parent_name}.")
+            self.log(f"Invalid parent object name {parent_name}.", "warning")
+            return []
 
         wildcard = name[-1] == "*"
         if wildcard:
@@ -218,9 +216,6 @@ class QGISLightPlugin:
         Args:
             parent (QWidget): Parent object.
             items (list): List of items.
-
-        Raises:
-            Exception: If invalid item.
         """
         for item in items:
 
@@ -260,7 +255,7 @@ class QGISLightPlugin:
                 parent.addWidget(item)
 
             else:
-                raise Exception(f"Invalid item {item}.")
+                self.log(f"Invalid item {item}.", "warning")
 
 
     def restoreLayout(self):
