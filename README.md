@@ -26,6 +26,12 @@ analysis functionality.
 
 ## How to simplify the QGIS interface?
 
+> [!NOTE]
+> For the first time you try the plugin, we suggest you to
+> [create a profile](https://docs.qgis.org/latest/en/docs/user_manual/introduction/qgis_configuration.html#working-with-user-profiles)
+> and use it before activating the plugin. If something goes wrong, you can
+> switch to the default profile to revert changes.
+
 - Install QGIS Light by using the plugin manager.
 
 - Once installed, you will see a tool button with a plain green QGIS logo added
