@@ -101,6 +101,44 @@ class QGISLightPlugin:
         )
 
 
+    @staticmethod
+    def associatedObjects(action: QAction) -> list:
+        """Returns objects associated with an action.
+
+        Bridges a Qt version difference: QAction.associatedWidgets() was
+        renamed to associatedObjects() when QAction moved to QtGui in Qt6.
+
+        Args:
+            action (QAction): Action object.
+
+        Returns:
+            List of associated objects.
+        """
+        if hasattr(action, "associatedObjects"):
+            return action.associatedObjects()
+        return action.associatedWidgets()
+
+
+    @staticmethod
+    def toEnum(enum_type, value):
+        """Coerces a value read from settings to a Qt enum type.
+
+        QgsSettings preserves Qt enum types under Qt6 but returns plain
+        integers under Qt5, so stored toolbar/panel areas and feature flags
+        must be normalized before they are passed back to Qt.
+
+        Args:
+            enum_type: Target Qt enum or flag type.
+            value: Value read from settings (an enum/flag or an integer).
+
+        Returns:
+            The value as an instance of enum_type.
+        """
+        if isinstance(value, enum_type):
+            return value
+        return enum_type(value)
+
+
     def getProviders(self, name: bool=False) -> list[str]:
         """Returns list of processing providers.
 
@@ -256,11 +294,11 @@ class QGISLightPlugin:
             if not wildcard:
                 return [action]
 
-            for widget in action.associatedObjects():
+            for widget in self.associatedObjects(action):
                 if isinstance(widget, QToolButton):
                     return [widget.menu()] if widget.menu() else widget.actions()
 
-            for widget in action.associatedObjects():
+            for widget in self.associatedObjects(action):
                 if isinstance(widget, QMenu):
                     return [widget]
 
@@ -333,8 +371,9 @@ class QGISLightPlugin:
                 self.log(f"Toolbar {item['name']} not found.", "warning")
                 continue
 
-            if self.mainwindow.toolBarArea(toolbar) != item["area"]:
-                self.mainwindow.addToolBar(item["area"], toolbar)
+            area = self.toEnum(Qt.ToolBarArea, item["area"])
+            if self.mainwindow.toolBarArea(toolbar) != area:
+                self.mainwindow.addToolBar(area, toolbar)
 
             toolbar.show()
             self.log(f"Toolbar {item['name']} is visible.")
@@ -348,10 +387,11 @@ class QGISLightPlugin:
                 self.log(f"Panel {item['name']} not found.", "warning")
                 continue
 
-            if self.mainwindow.dockWidgetArea(panel) != item["area"]:
-                self.mainwindow.addDockWidget(item["area"], panel)
+            area = self.toEnum(Qt.DockWidgetArea, item["area"])
+            if self.mainwindow.dockWidgetArea(panel) != area:
+                self.mainwindow.addDockWidget(area, panel)
 
-            panel.setFeatures(item["features"])
+            panel.setFeatures(self.toEnum(QDockWidget.DockWidgetFeature, item["features"]))
 
             if item["hidden"]:
                 panel.hide()
@@ -558,6 +598,6 @@ class QGISLightPlugin:
         # Remove enable simplifications action if required
         action = self.mainwindow.findChild(QAction, "mActionToggleQGISLight")
         if action:
-            for widget in action.associatedObjects():
+            for widget in self.associatedObjects(action):
                 widget.removeAction(action)
             action.deleteLater()
