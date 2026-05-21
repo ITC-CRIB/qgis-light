@@ -37,18 +37,18 @@ class QGISLightPlugin:
 
     # Toolbar areas
     _toolbar_areas = {
-        "top": Qt.TopToolBarArea,
-        "bottom": Qt.BottomToolBarArea,
-        "left": Qt.LeftToolBarArea,
-        "right": Qt.RightToolBarArea,
+        "top": Qt.ToolBarArea.TopToolBarArea,
+        "bottom": Qt.ToolBarArea.BottomToolBarArea,
+        "left": Qt.ToolBarArea.LeftToolBarArea,
+        "right": Qt.ToolBarArea.RightToolBarArea,
     }
 
     # Panel areas
     _panel_areas = {
-        "top": Qt.TopDockWidgetArea,
-        "bottom": Qt.BottomDockWidgetArea,
-        "left": Qt.LeftDockWidgetArea,
-        "right": Qt.RightDockWidgetArea,
+        "top": Qt.DockWidgetArea.TopDockWidgetArea,
+        "bottom": Qt.DockWidgetArea.BottomDockWidgetArea,
+        "left": Qt.DockWidgetArea.LeftDockWidgetArea,
+        "right": Qt.DockWidgetArea.RightDockWidgetArea,
     }
 
 
@@ -235,7 +235,7 @@ class QGISLightPlugin:
             toolbutton = QToolButton(self.mainwindow)
             toolbutton.setIcon(QIcon(algorithms["icon"]))
             toolbutton.setMenu(menu)
-            toolbutton.setPopupMode(QToolButton.MenuButtonPopup)
+            toolbutton.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
 
             return [toolbutton]
 
@@ -256,11 +256,11 @@ class QGISLightPlugin:
             if not wildcard:
                 return [action]
 
-            for widget in action.associatedWidgets():
+            for widget in action.associatedObjects():
                 if isinstance(widget, QToolButton):
                     return [widget.menu()] if widget.menu() else widget.actions()
 
-            for widget in action.associatedWidgets():
+            for widget in action.associatedObjects():
                 if isinstance(widget, QMenu):
                     return [widget]
 
@@ -304,7 +304,7 @@ class QGISLightPlugin:
                 else:
                     toolbutton = QToolButton(self.mainwindow)
                     toolbutton.setMenu(item)
-                    toolbutton.setPopupMode(QToolButton.MenuButtonPopup)
+                    toolbutton.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
                     toolbutton.setDefaultAction(item.actions()[0])
                     item.triggered.connect(toolbutton.setDefaultAction)
                     parent.addWidget(toolbutton)
@@ -351,7 +351,7 @@ class QGISLightPlugin:
             if self.mainwindow.dockWidgetArea(panel) != item["area"]:
                 self.mainwindow.addDockWidget(item["area"], panel)
 
-            panel.setFeatures(QDockWidget.DockWidgetFeatures(item["features"]))
+            panel.setFeatures(item["features"])
 
             if item["hidden"]:
                 panel.hide()
@@ -376,7 +376,7 @@ class QGISLightPlugin:
         self.mainwindow.menuBar().show()
 
         # Enable contextual menu
-        self.mainwindow.setContextMenuPolicy(Qt.DefaultContextMenu)
+        self.mainwindow.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
 
         # Remove simplified toolbars
         for name in self.config["toolbars"]:
@@ -425,7 +425,7 @@ class QGISLightPlugin:
         self.mainwindow.menuBar().hide()
 
         # Disable contextual menu
-        self.mainwindow.setContextMenuPolicy(Qt.NoContextMenu)
+        self.mainwindow.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
 
         # Set up toolbars
         items = []
@@ -451,7 +451,7 @@ class QGISLightPlugin:
             toolbar.setMovable(False)
             toolbar.toggleViewAction().setDisabled(True)
             self.mainwindow.addToolBar(
-                self._toolbar_areas.get(item["area"], Qt.TopToolBarArea),
+                self._toolbar_areas.get(item["area"], Qt.ToolBarArea.TopToolBarArea),
                 toolbar
             )
             self.addItems(toolbar, item["items"])
@@ -480,11 +480,11 @@ class QGISLightPlugin:
                 continue
             state, area = panels[name].split(":", 1)
             self.mainwindow.addDockWidget(
-                self._panel_areas.get(area, Qt.LeftDockWidgetArea),
+                self._panel_areas.get(area, Qt.DockWidgetArea.LeftDockWidgetArea),
                 panel
             )
             if state == "fixed":
-                panel.setFeatures(QDockWidget.NoDockWidgetFeatures)
+                panel.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
                 panel.show()
             elif state == "hidden":
                 panel.hide()
@@ -558,6 +558,6 @@ class QGISLightPlugin:
         # Remove enable simplifications action if required
         action = self.mainwindow.findChild(QAction, "mActionToggleQGISLight")
         if action:
-            for widget in action.associatedWidgets():
+            for widget in action.associatedObjects():
                 widget.removeAction(action)
             action.deleteLater()
