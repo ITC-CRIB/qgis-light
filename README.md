@@ -39,6 +39,12 @@ non-technical QGIS users, can be found in the following resources:
   https://doi.org/10.5281/zenodo.16082546
 
 
+## Compatibility
+
+QGIS Light runs on QGIS 3.22 or later, including QGIS 4. A single codebase
+supports both the Qt 5 (QGIS 3) and Qt 6 (QGIS 4) builds.
+
+
 ## How to simplify the QGIS interface?
 
 > [!NOTE]
