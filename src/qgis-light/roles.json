@@ -1,5 +1,5 @@
 {
-  "_comment": "Rollenmapping: Welche pgAdmin-Rolle bekommt welche Config? Reihenfolge bestimmt Priorität (erste Übereinstimmung gewinnt).",
+  "_comment": "Role mapping: Which pgAdmin role gets which config? Order determines priority, first match wins.",
   "roles": [
     {
       "rolname": "",

@@ -1,5 +1,5 @@
 {
-  "_comment": "Nutzerspezifisches Config-Mapping. Greift nur wenn keine Rolle aus roles.json passt. Reihenfolge ist irrelevant – Abgleich erfolgt auf exakten Benutzernamen.",
+  "_comment": "User-specific configuration mapping. Only applies if no role from roles.json matches. Order is irrelevant – matching is based on the exact username.",
   "users": [
     {
       "usernames": [],

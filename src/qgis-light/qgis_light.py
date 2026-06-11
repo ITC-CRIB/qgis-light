@@ -83,7 +83,7 @@ class QGISLightPlugin:
 
         # Load mapping JSONs
         self.connection_cfg = self._load_json(
-            connections_path, label="Verbindungsparameter"
+            connections_path, label="Connection Parameters"
         )
 
         self.roles_cfg = self._load_json(roles_path, label="DB Role Mapping")
@@ -219,7 +219,7 @@ class QGISLightPlugin:
 
             if not host or not port or not dbname:
                 self.log(
-                    "Verbindungsparameter unvollständig – Rollenprüfung übersprungen.",
+                    "Connection parameters incomplete, role check skipped.",
                     "warning",
                 )
                 return fallback_path
@@ -232,7 +232,7 @@ class QGISLightPlugin:
 
             if not role_names:
                 self.log(
-                    "Keine Rollen in roles.json definiert – Rollenprüfung übersprungen.",
+                    "No roles defined in roles.json, role check skipped.",
                     "warning",
                 )
                 return fallback_path
