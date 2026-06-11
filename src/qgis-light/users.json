@@ -1,0 +1,9 @@
+{
+  "_comment": "Nutzerspezifisches Config-Mapping. Greift nur wenn keine Rolle aus roles.json passt. Reihenfolge ist irrelevant – Abgleich erfolgt auf exakten Benutzernamen.",
+  "users": [
+    {
+      "usernames": [],
+      "config_path": ""
+    }
+  ]
+}
