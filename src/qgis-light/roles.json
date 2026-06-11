@@ -1,0 +1,9 @@
+{
+  "_comment": "Rollenmapping: Welche pgAdmin-Rolle bekommt welche Config? Reihenfolge bestimmt Priorität (erste Übereinstimmung gewinnt).",
+  "roles": [
+    {
+      "rolname": "",
+      "config_path": ""
+    }
+  ]
+}

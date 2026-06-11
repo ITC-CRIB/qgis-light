@@ -250,6 +250,39 @@ a refined and standardized user experience might be beneficial for QGIS. This
 will also facilitate initiatives like simplification.
 
 
+## Create different configs for different users and/or user groups
+
+This feature was contributed by Gesine Fengler (https://github.com/Gesine93) and enables automatic loading of
+different configuration files based on the authenticated QGIS user.
+
+This allows organizations to provide user- or role-specific simplified
+interfaces, where the visible tools and functions correspond to the
+responsibilities and permissions of the current user.
+
+The feature uses the QGIS Authentication Manager to identify the active user and
+automatically load the matching configuration file. It can be used in two ways:
+
+- **User-based configuration**: Individual users are defined in the
+  `users.json` file, and each user is assigned a dedicated configuration file.
+- **Role-based configuration**: PostgreSQL/PostGIS roles
+  are used as authenticated users, and matching
+  configuration files are loaded automatically.
+  - **Project-based configuration**: The configuration can also be defined by project name. 
+  The project and config paths can be defined in the `projects.json`
+
+### Prerequisites
+
+To use this feature, the following requirements must be met:
+
+1. Users are defined either in the `users.json` file 
+   or as PostgreSQL roles and the `roles.json` contains the role.
+2. Matching authentication configurations are created in the QGIS
+   Authentication Manager.
+3. To implement the role-based-configuration, the PostgreSQL connection has to be defined in `connections.json`
+4. A QGIS Light configuration file exists for each user or role.
+
+
+
 ## Acknowledgements
 
 [Serkan Girgin](https://github.com/girgink) initiated the idea and developed
