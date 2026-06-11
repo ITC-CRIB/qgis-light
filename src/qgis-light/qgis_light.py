@@ -65,179 +65,116 @@ class QGISLightPlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
         self.log(f"Plugin directory is {self.plugin_dir}.")
 
-        # Defaults
-        self.user = None
-        self.matched_roles = []
+        # Load custom configuration assets
+        self.custom = {
+            "connections": self._load_json("connections.json"),
+            "roles": self._load_json("roles.json"),
+            "users": self._load_json("users.json"),
+            "projects": self._load_json("projects.json"),
+        }
 
-        # Default config
-        self.standard_config_path = os.path.join(self.plugin_dir, "config.json")
-
-        # JSON paths
-        connections_path = os.path.join(self.plugin_dir, "connections.json")
-
-        roles_path = os.path.join(self.plugin_dir, "roles.json")
-
-        users_path = os.path.join(self.plugin_dir, "users.json")
-
-        projects_path = os.path.join(self.plugin_dir, "projects.json")
-
-        # Load mapping JSONs
-        self.connection_cfg = self._load_json(
-            connections_path, label="Connection Parameters"
-        )
-
-        self.roles_cfg = self._load_json(roles_path, label="DB Role Mapping")
-
-        self.users_cfg = self._load_json(users_path, label="User Mapping")
-
-        self.projects_cfg = self._load_json(projects_path, label="Project Mapping")
-
-        # Resolve config
+        # Resolve configuration path
         config_path = self.resolve_config()
 
-        if config_path == self.standard_config_path:
-            self.log("No specific mapping found – using default configuration.")
-
-        # active config path
-        self.config_path = config_path
-
-        # active config
-        self.config = {}
-
-        # load config
-        self.apply_config(config_path)
+        # Load configuration
+        self.load_config(config_path)
 
     def resolve_config(self) -> str:
-        """Resolve active config path."""
+        """Resolve configuration path."""
+        return (
+            self._resolve_config_by_user()
+            or self._resolve_config_by_role()
+            or self._resolve_config_by_project()
+            or os.path.join(self.plugin_dir, "config.json")
+        )
 
-        standard_config_path = os.path.join(self.plugin_dir, "config.json")
+    def _get_abspath(self, path: str) -> str | None:
+        """Return absolute path."""
+        if not path:
+            return None
+        if os.path.isabs(path):
+            return path
+        else:
+            return os.path.join(self.plugin_dir, path)
 
-        config_path = standard_config_path
-
-        # 1 user
-        resolved = self._resolve_config_by_user(self.users_cfg)
-
-        if resolved:
-            return resolved
-
-        # 2 role
-        if self.connection_cfg and self.roles_cfg:
-            resolved = self._resolve_config_by_role(
-                self.connection_cfg, self.roles_cfg, fallback_path=None
-            )
-
-            if resolved:
-                return resolved
-
-        # 3 project
-        if self.projects_cfg:
-            resolved = self._resolve_config_by_project(self.projects_cfg)
-
-            if resolved:
-                return resolved
-
-        return config_path
-
-    def _load_json(self, path: str, label: str = "JSON") -> dict | None:
-        """Loads a JSON file and returns its content.
-
-        Returns None if the file does not exist or is invalid.
+    def _load_json(self, filename: str) -> dict:
+        """Load a JSON file and return its content.
 
         Args:
-            path: File path.
-            label: Label used for log messages.
-        """
-
-        if not os.path.isfile(path):
-            self.log(f"Couldn't find {label}: {path}", "warning")
-            return None
-        try:
-            with open(path, encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            self.log(f"Couldn't load {label} ({path}): {e}", "error")
-            return None
-
-    def _get_auth_username(self) -> str | None:
-        """Reads the username from the QGIS Auth Manager.
+            filename: File name.
 
         Returns:
-            Username or None if no auth entry exists.
+            File content if successful, otherwise empty dictionary.
         """
+        path = os.path.join(self.plugin_dir, filename)
+        try:
+            with open(path, encoding="utf-8") as file:
+                return json.load(file)
 
+        except Exception as err:
+            self.log(f"Could not load {path}: {err}", "error")
+            return {}
+
+    def _get_user(self) -> dict | None:
+        """Get user configuration from the QGIS Authentication Manager.
+
+        Returns:
+            User configuration if found, otherwise None.
+        """
         try:
             manager = QgsApplication.authManager()
-            auth_method_cfg = QgsAuthMethodConfig()
             auth_ids = manager.availableAuthMethodConfigs()
             if not auth_ids:
                 return None
             auth_id = list(auth_ids.keys())[0]
-            manager.loadAuthenticationConfig(auth_id, auth_method_cfg, True)
-            return auth_method_cfg.configMap().get("username")
-        except Exception as e:
-            self.log(
-                f"Username could not be read from the Auth Manager: {e}", "warning"
-            )
-            return None
-
-    def _resolve_config_by_role(
-        self, connection_cfg: dict, roles_cfg: dict, fallback_path: str | None
-    ) -> str | None:
-        """
-        Checks the database roles of the current user and returns the corresponding config path.
-
-        Args:
-            connection_cfg: Connection parameters from connections.json.
-            roles_cfg: Role mapping from roles.json.
-            fallback_path: Return value if no role matches (None = no fallback).
-
-        Returns:
-            Config path or fallback_path.
-        """
-
-        try:
-            # Retrieve auth credentials from the QGIS Auth Manager
-            manager = QgsApplication.authManager()
-            auth_ids = manager.availableAuthMethodConfigs()
-            if not auth_ids:
-                self.log(
-                    "No authentication stored in QGIS – role check skipped.", "warning"
-                )
-                return fallback_path
-
-            auth_id = list(auth_ids.keys())[0]
             auth_method_cfg = QgsAuthMethodConfig()
             manager.loadAuthenticationConfig(auth_id, auth_method_cfg, True)
-            user = auth_method_cfg.configMap().get("username")
-            password = auth_method_cfg.configMap().get("password")
-            self.user = user
+            return auth_method_cfg.configMap()
 
-            # connection parameters
-            host = connection_cfg.get("host")
-            port = int(connection_cfg.get("port", 5432))
-            dbname = connection_cfg.get("dbname")
+        except Exception as err:
+            self.log(f"Could not read user configuration: {err}", "error")
+            return None
 
-            if not host or not port or not dbname:
-                self.log(
-                    "Connection parameters incomplete, role check skipped.",
-                    "warning",
-                )
-                return fallback_path
+    def _resolve_config_by_role(self) -> str | None:
+        """
+        Resolve configuration path based on user roles in the database.
 
-            # roles
-            role_entries: list[dict] = roles_cfg.get("roles", [])
-            role_names = [
-                entry["rolname"] for entry in role_entries if "rolname" in entry
-            ]
+        Returns:
+            Configuration path if found, otherwise None.
+        """
+        self.log("Resolving configuration path based on user roles")
 
-            if not role_names:
-                self.log(
-                    "No roles defined in roles.json, role check skipped.",
-                    "warning",
-                )
-                return fallback_path
+        # Get user information
+        user = self._get_user() or {}
 
-            # prepare SQL
+        username = user.get("username")
+        password = user.get("password")
+
+        # Return if no username
+        if not username:
+            self.log("No active user")
+            return None
+
+        # Get user roles
+        role_entries: list[dict] = self.custom["roles"].get("roles", [])
+        role_names = [entry["rolname"] for entry in role_entries if "rolname" in entry]
+
+        if not role_names:
+            self.log("No user roles", "warning")
+            return None
+
+        # Get database connection parameters
+        host = self.custom["connections"].get("host")
+        port = int(self.custom["connections"].get("port") or 5432)
+        dbname = self.custom["connections"].get("dbname")
+
+        # Return if connections parameters are incomplete
+        if not host or not port or not dbname:
+            self.log("Incomplete database connection parameters", "warning")
+            return None
+
+        # Fetch roles defined in the database
+        try:
             sql = """
                 SELECT r1.rolname
                 FROM pg_roles r
@@ -246,166 +183,124 @@ class QGISLightPlugin:
                 WHERE r.rolname = %s
                 AND r1.rolname = ANY(%s)
             """
-
-            # DB-connection with psycopg2
             conn = psycopg2.connect(
-                host=host, port=port, dbname=dbname, user=user, password=password
+                host=host, port=port, dbname=dbname, user=username, password=password
             )
             cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            cur.execute(sql, (user, role_names))
+            cur.execute(sql, (username, role_names))
             rows = cur.fetchall()
             conn.close()
 
-            self.matched_roles = [row["rolname"] for row in rows]
-
-            if not self.matched_roles:
-                self.log(f"User '{user}' does not have any of the configured roles.")
-                return fallback_path
-
-            self.log(f"User '{user}' – found roles: {self.matched_roles}")
-
-            # First matching role → determine config path (priority = order in roles.json)
-
-            for entry in role_entries:
-                if entry.get("rolname") in self.matched_roles:
-                    cfg_path = entry.get("config_path")
-                    if cfg_path and os.path.isfile(cfg_path):
-                        self.log(f"Role-based config found: {cfg_path}")
-                        return cfg_path
-                    else:
-                        self.log(
-                            f"Config path for role '{entry['rolname']}' not found: {cfg_path}",
-                            "warning",
-                        )
-
-            self.log(
-                "No valid role-based config – continuing with next step.", "warning"
-            )
-            return fallback_path
-
-        except Exception as e:
-            import traceback
-
-            self.log(f"Role check failed: {e}", "error")
-            self.log(traceback.format_exc(), "error")
-            return fallback_path
-
-    def _resolve_config_by_user(self, users_cfg: dict) -> str | None:
-        """Returns config path based on users.json."""
-
-        if not users_cfg:
+        except Exception as err:
+            self.log(f"Could not fetch roles: {err}", "error")
             return None
 
-        if not self.user:
-            self.user = self._get_auth_username()
+        matched_roles = [row["rolname"] for row in rows]
 
-        if not self.user:
-            self.log("No username available for users.json.", "warning")
+        if not matched_roles:
+            self.log(f"User '{username}' does not have any roles")
             return None
 
-        user_entries = users_cfg.get("users", [])
+        self.log(f"User '{username}' has roles: {matched_roles}")
 
-        for entry in user_entries:
-            usernames = entry.get("usernames", [])
-
-            if self.user in usernames:
-                cfg_path = entry.get("config_path")
-                if cfg_path and os.path.isfile(cfg_path):
-                    self.log(f"User-based config found: {cfg_path}")
-                    return cfg_path
+        for entry in role_entries:
+            if entry.get("rolname") in matched_roles:
+                path = self._get_abspath(entry.get("config_path"))
+                if path and os.path.isfile(path):
+                    self.log(
+                        f"Configuration found for role {entry['rolname']}: {path}"
+                    )
+                    return path
                 else:
                     self.log(
-                        f"Config for user '{self.user}' is invalid: {cfg_path}",
+                        f"Invalid configuration for role '{entry['rolname']}': {path}",
                         "warning",
                     )
 
-        self.log(f"No entry for user '{self.user}' in users.json.")
+        self.log(f"No configuration found for roles '{matched_roles}'")
         return None
 
-    def _resolve_config_by_project(self, projects_cfg: dict) -> str | None:
-        """Returns config path based on current QGIS project."""
+    def _resolve_config_by_user(self) -> str | None:
+        """Resolve configuration path based on user.
 
-        if not projects_cfg:
+        Returns:
+            Configuration path if found, otherwise None.
+        """
+        self.log("Resolving configuration path based on user")
+
+        user = self._get_user() or {}
+
+        username = user.get("username")
+        if not username:
+            self.log("No active user")
             return None
 
-        try:
-            project = QgsProject.instance()
+        for entry in self.custom["users"].get("users", []):
+            if username in entry.get("usernames", []):
+                path = self._get_abspath(entry.get("config_path"))
+                if path and os.path.isfile(path):
+                    self.log(f"Configuration found for user '{username}': {path}")
+                    return path
+                else:
+                    self.log(
+                        f"Invalid configuration for user '{username}': {path}",
+                        "warning",
+                    )
 
-            project_path = project.fileName()
+        self.log(f"No configuration found for user '{username}'")
+        return None
 
-            if not project_path:
-                self.log("No QGIS project loaded.")
-                return None
+    def _resolve_config_by_project(self) -> str | None:
+        """Resolve configuration path based on project filename.
 
-            project_name = os.path.basename(project_path)
+        Returns:
+            Configuration path if found, otherwise None.
+        """
+        self.log("Resolving configuration path based on project filename")
 
-            self.log(f"Current project: {project_name}")
-
-            project_entries = projects_cfg.get("projects", [])
-
-            for entry in project_entries:
-                names = entry.get("project_names", [])
-
-                if project_name in names:
-                    cfg_path = entry.get("config_path")
-
-                    if cfg_path and os.path.isfile(cfg_path):
-                        self.log(f"Project-based config found: {cfg_path}")
-                        return cfg_path
-
-                    else:
-                        self.log(
-                            f"Invalid config for project '{project_name}': {cfg_path}",
-                            "warning",
-                        )
-
-            self.log(f"No project mapping found for '{project_name}'.")
+        project_path = QgsProject.instance().fileName()
+        if not project_path:
+            self.log("No active project")
             return None
 
-        except Exception as e:
-            self.log(f"Project mapping failed: {e}", "error")
-            return None
+        project_name = os.path.basename(project_path)
 
-    def apply_config(self, config_path: str):
-        """Loads config file."""
+        for entry in self.custom["projects"].get("projects", []):
+            if project_name in entry.get("project_names", []):
+                path = self._get_abspath(entry.get("config_path"))
+                if path and os.path.isfile(path):
+                    self.log(
+                        f"Configuration found for project '{project_name}': {path}"
+                    )
+                    return path
+                else:
+                    self.log(
+                        f"Invalid configuration for project '{project_name}': {path}",
+                        "warning",
+                    )
 
+        self.log(f"No configuration found for project '{project_name}'")
+        return None
+
+    def load_config(self, path: str):
+        """Load configuration from the file.
+
+        Args:
+            path: Configuration file path.
+        """
         self.config = {}
+        self.config_path = None
 
         try:
-            with open(config_path, encoding="utf-8") as f:
-                self.config = json.load(f)
+            with open(path, encoding="utf-8") as file:
+                self.config = json.load(file)
 
-            self.config_path = config_path
+            self.config_path = path
 
-            self.log(f"Configuration loaded from {config_path}")
+            self.log(f"Configuration is loaded from {path}")
 
-        except Exception as e:
-            self.log(f"Couldn't load config file ({config_path}): {e}", "error")
-
-    def check_project_config(self, *args):
-        """Re-resolve config after project change."""
-
-        new_config = self.resolve_config()
-
-        # already active
-        if new_config == self.config_path:
-            self.log("Correct config already active.")
-            return
-
-        self.log(f"Switching config to: {new_config}")
-
-        enabled = self.settings.value("qgislight/enabled") == "true"
-
-        # disable current UI
-        if enabled:
-            self.disable(store=False)
-
-        # load new config
-        self.apply_config(new_config)
-
-        # enable again
-        if enabled:
-            self.enable(store=False)
+        except Exception as err:
+            self.log(f"Could not load configuration file {path}: {err}", "error")
 
     def log(self, message: str, level: str = "info"):
         """Logs a message to the log panel.
@@ -891,22 +786,34 @@ class QGISLightPlugin:
                 widget.hide()
 
     def refresh(self):
-        """Refreshes simplifications."""
-        # Check project configuration
-        self.check_project_config()
+        """Refresh user interface."""
+        self.log("Refreshing user interface.")
 
         # Get enabled flag
-        enabled = self.settings.value("qgislight/enabled")
+        enabled = self.settings.value("qgislight/enabled") == "true"
         self.log(f"Enabled flag is {enabled}.")
 
-        # Check if simplifications are enabled
-        if enabled == "true":
-            # Delay enabling until UI restore is finished
+        # Get configuration path
+        config_path = self.resolve_config()
+
+        # Switch configuration if required
+        if config_path != self.config_path:
+            self.log(f"Switching configuration to {config_path}")
+
+            # Disable simplifications if required
+            if enabled:
+                self.disable()
+
+            # Load new configuration
+            self.load_config(config_path)
+
+        # Enable simplifications if required
+        if enabled:
             QTimer.singleShot(0, self.enable)
 
     def initGui(self):
         """Initializes plugin user interface."""
-        self.log("Initializing user interface.")
+        self.log("Initializing plugin user interface.")
 
         # Connect to initializationCompleted signal to delay initialization.
         #
@@ -943,7 +850,8 @@ class QGISLightPlugin:
                 widget.removeAction(action)
             action.deleteLater()
 
+        # Disconnect from project read signal
         try:
             QgsProject.instance().readProject.disconnect(self.refresh)
-        except:
+        except Exception:
             pass
