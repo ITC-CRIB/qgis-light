@@ -362,9 +362,7 @@ class QGISLightPlugin:
             if self.mainwindow.dockWidgetArea(panel) != area:
                 self.mainwindow.addDockWidget(area, panel)
 
-            panel.setFeatures(
-                QDockWidget.DockWidgetFeature(item["features"])
-            )
+            panel.setFeatures(QDockWidget.DockWidgetFeature(item["features"]))
 
             if item["hidden"]:
                 panel.hide()
@@ -602,3 +600,8 @@ class QGISLightPlugin:
             for widget in self.associatedObjects(action):
                 widget.removeAction(action)
             action.deleteLater()
+
+        try:
+            QgsProject.instance().readProject.disconnect(self.refresh)
+        except:
+            pass
